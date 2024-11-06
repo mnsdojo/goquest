@@ -3,6 +3,7 @@ package goquest
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 )
@@ -25,6 +26,32 @@ func NewFetcher[T any](httpClient *http.Client, defaultExpiration time.Duration)
 		client:            httpClient,
 		defaultExpiration: defaultExpiration,
 	}
+}
+
+func (f *Fetcher[T]) Post(ctx context.Context, url string, body io.Reader, headers map[string]string) (*FetchResult[T], error) {
+	return f.Fetch(ctx, url, FetchOptions{
+		Method:          Post,
+		CacheExpiration: f.defaultExpiration,
+		Headers:         headers,
+		Body:            body,
+	})
+}
+
+func (f *Fetcher[T]) Put(ctx context.Context, url string, body io.Reader, headers map[string]string) (*FetchResult[T], error) {
+	return f.Fetch(ctx, url, FetchOptions{
+		Method:          Put,
+		CacheExpiration: f.defaultExpiration,
+		Headers:         headers,
+		Body:            body,
+	})
+}
+
+func (f *Fetcher[T]) Delete(ctx context.Context, url string, headers map[string]string) (*FetchResult[T], error) {
+	return f.Fetch(ctx, url, FetchOptions{
+		Method:          Delete,
+		CacheExpiration: f.defaultExpiration,
+		Headers:         headers,
+	})
 }
 
 // get reqwst with default expiration
@@ -69,4 +96,5 @@ func (f *Fetcher[T]) Fetch(ctx context.Context, url string, options FetchOptions
 	// Use the cache to fetch the result
 	return f.cache.fetch(ctx, url, fetchFunc, options.CacheExpiration)
 }
+
 //
