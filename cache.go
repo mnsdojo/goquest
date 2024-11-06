@@ -32,16 +32,18 @@ func (c *cache[T]) fetch(
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// Return cached entry if valid
+	// Check if the cache has a valid entry for the given key.
 	if entry, ok := c.values[key]; ok && entry.expiresAt.After(time.Now()) {
 		return entry.value, nil
 	}
 
-	// Fetch and cache new entry
+	// Fetch the result using the provided fetchFunc.
 	result, err := fetchFunc(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	// Store the fetched result in the cache with expiration time.
 	c.values[key] = &cacheEntry[T]{
 		value:     result,
 		expiresAt: time.Now().Add(cacheExpiration),
